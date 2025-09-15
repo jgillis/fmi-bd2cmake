@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fmi-bd2cmake"
+version = "0.1.0"
+description = "CMakeLists.txt generator that reads buildDescription.xml in FMI source"
+readme = "README.md"
+requires-python = ">=3.6"
+authors = [
+    {name = "FMI Build Tools"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    # Only standard library dependencies as requested
+]
+
+[project.scripts]
+fmi-bd2cmake = "fmi_bd2cmake.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["fmi_bd2cmake*"]
