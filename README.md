@@ -27,13 +27,6 @@ fmi-bd2cmake
 # Specify custom input/output paths
 fmi-bd2cmake --input path/to/buildDescription.xml --output MyProject.txt
 
-# Specify FMI headers directory (for fmi2Functions.h)
-fmi-bd2cmake --fmi-headers /usr/include/fmi2
-
-# Using environment variable for FMI headers
-export FMI_HEADERS_DIR=/usr/include/fmi2
-fmi-bd2cmake
-
 # Get help
 fmi-bd2cmake --help
 ```
@@ -104,25 +97,28 @@ The tool automatically detects the target architecture and generates appropriate
 
 ## FMI Headers Configuration
 
-FMI header files (such as `fmi2Functions.h`) are typically not included in the FMU source distribution. You can specify their location using:
+FMI header files (such as `fmi2Functions.h`) are typically not included in the FMU source distribution. The generated CMakeLists.txt automatically attempts to locate these headers and provides several ways to specify their location:
 
-### Command Line Option
+### CMake Variable
 ```bash
-fmi-bd2cmake --fmi-headers /path/to/fmi/headers
+cmake -DFMI_HEADERS_DIR=/path/to/fmi/headers .
 ```
 
 ### Environment Variable
 ```bash
 export FMI_HEADERS_DIR=/path/to/fmi/headers
-fmi-bd2cmake
+cmake .
 ```
 
-The command line option takes precedence over the environment variable if both are specified.
+### Automatic Discovery
+The generated CMakeLists.txt will automatically search for FMI headers in common locations:
+- `/usr/include/fmi2` (Ubuntu/Debian libfmi-dev package)
+- `/usr/local/include/fmi2` (custom installation)
+- `/opt/local/include/fmi2` (MacPorts)
+- `../fmi-headers` (relative to project)
+- `fmi-headers` (in project directory)
 
-Common locations for FMI headers:
-- **Ubuntu/Debian**: `/usr/include/fmi2` (when installing libfmi-dev package)
-- **Custom installation**: `/usr/local/include/fmi2`
-- **Development setup**: Relative paths like `../fmi-headers`
+The CMake variable takes precedence over the environment variable, which takes precedence over automatic discovery.
 
 ## Examples
 

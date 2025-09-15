@@ -25,11 +25,7 @@ def main():
         default="CMakeLists.txt",
         help="Output CMakeLists.txt file path (default: CMakeLists.txt)"
     )
-    parser.add_argument(
-        "--fmi-headers",
-        default=os.environ.get("FMI_HEADERS_DIR"),
-        help="Path to FMI header directory containing fmi2Functions.h (can also be set via FMI_HEADERS_DIR environment variable)"
-    )
+
     
     args = parser.parse_args()
     
@@ -47,7 +43,7 @@ def main():
         
         # Generate CMakeLists.txt
         generator = CMakeGenerator()
-        cmake_content = generator.generate(build_info, fmi_headers_dir=args.fmi_headers)
+        cmake_content = generator.generate(build_info)
         
         # Write output file
         output_path = Path(args.output)

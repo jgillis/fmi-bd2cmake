@@ -8,7 +8,7 @@ from .parser import BuildInfo
 class CMakeGenerator:
     """Generates CMakeLists.txt content from FMI build information."""
     
-    def generate(self, build_info: BuildInfo, fmi_headers_dir: str = None) -> str:
+    def generate(self, build_info: BuildInfo) -> str:
         """Generate CMakeLists.txt content from build information."""
         lines = []
         
@@ -69,10 +69,6 @@ class CMakeGenerator:
         include_dirs = set()
         include_dirs.add("sources")  # Always include sources directory
         
-        # Add FMI headers directory if specified
-        if fmi_headers_dir:
-            include_dirs.add(fmi_headers_dir)
-        
         # Add global include directories
         for inc_dir in config.include_directories:
             include_dirs.add(inc_dir)
@@ -82,9 +78,17 @@ class CMakeGenerator:
             for inc_dir in sfs.include_directories:
                 include_dirs.add(inc_dir)
         
+        # Add FMI headers directory finding logic
+        fmi_headers_section = self._generate_fmi_headers_section()
+        if fmi_headers_section:
+            lines.extend(fmi_headers_section)
+            lines.append("")
+        
         if include_dirs:
             lines.append("# Include directories")
             lines.append(f"target_include_directories({project_name} PRIVATE")
+            # Add FMI headers if found
+            lines.append("    $<$<BOOL:${FMI_HEADERS_DIR}>:${FMI_HEADERS_DIR}>")
             for inc_dir in sorted(include_dirs):
                 lines.append(f"    {inc_dir}")
             lines.append(")")
@@ -149,6 +153,39 @@ class CMakeGenerator:
         lines.append(f"file(MAKE_DIRECTORY ${{CMAKE_BINARY_DIR}}/binaries/{arch})")
         
         return "\n".join(lines) + "\n"
+    
+    def _generate_fmi_headers_section(self) -> List[str]:
+        """Generate CMake code to find FMI headers directory."""
+        lines = []
+        
+        lines.append("# Find FMI headers directory")
+        lines.append("# Can be set via -DFMI_HEADERS_DIR=/path or FMI_HEADERS_DIR environment variable")
+        lines.append("if(NOT FMI_HEADERS_DIR)")
+        lines.append("    # Try environment variable first")
+        lines.append("    set(FMI_HEADERS_DIR $ENV{FMI_HEADERS_DIR})")
+        lines.append("endif()")
+        lines.append("")
+        lines.append("# Try to find fmi2Functions.h if FMI_HEADERS_DIR is not set")
+        lines.append("if(NOT FMI_HEADERS_DIR)")
+        lines.append("    find_path(FMI_HEADERS_DIR")
+        lines.append("        NAMES fmi2Functions.h")
+        lines.append("        PATHS")
+        lines.append("            /usr/include/fmi2")
+        lines.append("            /usr/local/include/fmi2") 
+        lines.append("            /opt/local/include/fmi2")
+        lines.append("            ${CMAKE_SOURCE_DIR}/../fmi-headers")
+        lines.append("            ${CMAKE_SOURCE_DIR}/fmi-headers")
+        lines.append("        DOC \"FMI headers directory containing fmi2Functions.h\"")
+        lines.append("    )")
+        lines.append("endif()")
+        lines.append("")
+        lines.append("if(FMI_HEADERS_DIR)")
+        lines.append("    message(STATUS \"Using FMI headers from: ${FMI_HEADERS_DIR}\")")
+        lines.append("else()")
+        lines.append("    message(STATUS \"FMI headers not found - you may need to set FMI_HEADERS_DIR\")")
+        lines.append("endif()")
+        
+        return lines
     
     def _get_language_standards(self, config) -> tuple:
         """Determine C and C++ standards from source file set languages."""
