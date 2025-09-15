@@ -1,0 +1,11 @@
+<fmiBuildDescription fmiVersion="2.0">
+  <BuildConfiguration description="C++ build configuration" modelIdentifier="cpp_model">
+    <SourceFileSet language="C++" compilerOptions="-std=c++11 -O2">
+      <SourceFile name="model.cpp"/>
+      <SourceFile name="helper.cpp"/>
+      <IncludeDirectory name="../include"/>
+      <PreprocessorDefinition name="CPP_MODEL"/>
+    </SourceFileSet>
+    <Library name="stdc++"/>
+  </BuildConfiguration>
+</fmiBuildDescription>

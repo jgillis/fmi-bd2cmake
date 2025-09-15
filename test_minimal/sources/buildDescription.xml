@@ -1,0 +1,7 @@
+<fmiBuildDescription fmiVersion="2.0">
+  <BuildConfiguration modelIdentifier="minimal">
+    <SourceFileSet>
+      <SourceFile name="minimal.c"/>
+    </SourceFileSet>
+  </BuildConfiguration>
+</fmiBuildDescription>
