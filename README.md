@@ -27,6 +27,13 @@ fmi-bd2cmake
 # Specify custom input/output paths
 fmi-bd2cmake --input path/to/buildDescription.xml --output MyProject.txt
 
+# Specify FMI headers directory (for fmi2Functions.h)
+fmi-bd2cmake --fmi-headers /usr/include/fmi2
+
+# Using environment variable for FMI headers
+export FMI_HEADERS_DIR=/usr/include/fmi2
+fmi-bd2cmake
+
 # Get help
 fmi-bd2cmake --help
 ```
@@ -82,6 +89,7 @@ The tool supports FMI 2.0 buildDescription.xml format with the following element
 - **Standard library only**: No external dependencies beyond Python standard library
 - **Cross-platform**: Automatically detects target architecture (x86_64-linux, x86_64-windows, etc.)
 - **Full FMI support**: Handles source files, include directories, preprocessor definitions, and libraries
+- **FMI headers support**: Optional specification of external FMI header directory (typically containing fmi2Functions.h)
 - **Multiple source file sets**: Supports different language/compiler settings per source set
 - **CMake best practices**: Generates modern CMake with proper target properties
 - **Error handling**: Clear error messages for missing files or invalid XML
@@ -93,6 +101,28 @@ The tool automatically detects the target architecture and generates appropriate
 - Linux: `binaries/x86_64-linux/`, `binaries/arm-linux/`
 - Windows: `binaries/x86_64-windows/`, `binaries/x86-windows/`
 - macOS: `binaries/x86_64-darwin/`, `binaries/aarch64-darwin/`
+
+## FMI Headers Configuration
+
+FMI header files (such as `fmi2Functions.h`) are typically not included in the FMU source distribution. You can specify their location using:
+
+### Command Line Option
+```bash
+fmi-bd2cmake --fmi-headers /path/to/fmi/headers
+```
+
+### Environment Variable
+```bash
+export FMI_HEADERS_DIR=/path/to/fmi/headers
+fmi-bd2cmake
+```
+
+The command line option takes precedence over the environment variable if both are specified.
+
+Common locations for FMI headers:
+- **Ubuntu/Debian**: `/usr/include/fmi2` (when installing libfmi-dev package)
+- **Custom installation**: `/usr/local/include/fmi2`
+- **Development setup**: Relative paths like `../fmi-headers`
 
 ## Examples
 

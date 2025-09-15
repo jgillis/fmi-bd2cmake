@@ -8,7 +8,7 @@ from .parser import BuildInfo
 class CMakeGenerator:
     """Generates CMakeLists.txt content from FMI build information."""
     
-    def generate(self, build_info: BuildInfo) -> str:
+    def generate(self, build_info: BuildInfo, fmi_headers_dir: str = None) -> str:
         """Generate CMakeLists.txt content from build information."""
         lines = []
         
@@ -68,6 +68,10 @@ class CMakeGenerator:
         # Add include directories
         include_dirs = set()
         include_dirs.add("sources")  # Always include sources directory
+        
+        # Add FMI headers directory if specified
+        if fmi_headers_dir:
+            include_dirs.add(fmi_headers_dir)
         
         # Add global include directories
         for inc_dir in config.include_directories:
