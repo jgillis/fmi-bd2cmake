@@ -29,7 +29,7 @@ class CMakeGenerator:
         lines.append("")
 
         # Architecture detection (after project() call)
-        lines.extend(self._generate_architecture_detection())
+        lines.extend(self._generate_architecture_detection(build_info.fmi_version))
         lines.append("")
         
         # Set language standards based on source file set languages
@@ -84,7 +84,7 @@ class CMakeGenerator:
                 include_dirs.add(inc_dir)
         
         # Add FMI headers directory finding logic
-        fmi_headers_section = self._generate_fmi_headers_section()
+        fmi_headers_section = self._generate_fmi_headers_section(build_info.fmi_version)
         if fmi_headers_section:
             lines.extend(fmi_headers_section)
             lines.append("")
@@ -159,13 +159,22 @@ class CMakeGenerator:
         
         return "\n".join(lines) + "\n"
     
-    def _generate_architecture_detection(self) -> List[str]:
-        """Generate CMake code for architecture detection (inspired by Reference-FMUs)."""
+    def _generate_architecture_detection(self, fmi_version: str) -> List[str]:
+        """Generate CMake code for architecture detection based on FMI version (inspired by Reference-FMUs)."""
         lines = []
         
         lines.append("# Architecture detection")
-        lines.append("set(FMI_ARCHITECTURE \"\" CACHE STRING \"FMI Architecture\")")
-        lines.append("set_property(CACHE FMI_ARCHITECTURE PROPERTY STRINGS \"\" \"aarch64\" \"x86\" \"x86_64\")")
+        
+        # FMI 3.0 supports additional architectures compared to FMI 2.0
+        if fmi_version.startswith("3."):
+            # FMI 3.0 architecture set (expanded)
+            lines.append("set(FMI_ARCHITECTURE \"\" CACHE STRING \"FMI Architecture\")")
+            lines.append("set_property(CACHE FMI_ARCHITECTURE PROPERTY STRINGS \"\" \"aarch64\" \"arm\" \"riscv64\" \"x86\" \"x86_64\")")
+        else:
+            # FMI 2.0 architecture set (traditional)
+            lines.append("set(FMI_ARCHITECTURE \"\" CACHE STRING \"FMI Architecture\")")
+            lines.append("set_property(CACHE FMI_ARCHITECTURE PROPERTY STRINGS \"\" \"aarch64\" \"x86\" \"x86_64\")")
+        
         lines.append("")
         lines.append("if (NOT FMI_ARCHITECTURE)")
         lines.append("  # Try CMAKE_SYSTEM_PROCESSOR first, then CMAKE_HOST_SYSTEM_PROCESSOR as fallback")
@@ -174,6 +183,8 @@ class CMakeGenerator:
         lines.append("    set(PROCESSOR \"${CMAKE_HOST_SYSTEM_PROCESSOR}\")")
         lines.append("  endif()")
         lines.append("  ")
+        
+        # Architecture detection logic
         lines.append("  if (PROCESSOR MATCHES \"AMD64|x86_64\")")
         lines.append("    set(FMI_ARCHITECTURE \"x86_64\")")
         lines.append("  elseif (PROCESSOR MATCHES \"i386|i686|x86\")")
@@ -182,6 +193,12 @@ class CMakeGenerator:
         lines.append("    set(FMI_ARCHITECTURE \"aarch64\")")
         lines.append("  elseif (PROCESSOR MATCHES \"arm\")")
         lines.append("    set(FMI_ARCHITECTURE \"arm\")")
+        
+        # FMI 3.0 includes additional architectures
+        if fmi_version.startswith("3."):
+            lines.append("  elseif (PROCESSOR MATCHES \"riscv64\")")
+            lines.append("    set(FMI_ARCHITECTURE \"riscv64\")")
+        
         lines.append("  else ()")
         lines.append("    # Default to x86_64 if processor is unknown or empty")
         lines.append("    message(STATUS \"Unknown or empty system processor '${PROCESSOR}', defaulting to x86_64\")")
@@ -189,6 +206,8 @@ class CMakeGenerator:
         lines.append("  endif ()")
         lines.append("endif ()")
         lines.append("")
+        
+        # Platform detection (same for both versions)
         lines.append("# Platform detection")
         lines.append("if (WIN32)")
         lines.append("  set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-windows\")")
@@ -202,9 +221,17 @@ class CMakeGenerator:
         
         return lines
     
-    def _generate_fmi_headers_section(self) -> List[str]:
-        """Generate CMake code to find FMI headers directory."""
+    def _generate_fmi_headers_section(self, fmi_version: str) -> List[str]:
+        """Generate CMake code to find FMI headers directory based on FMI version."""
         lines = []
+        
+        # Determine header file name based on FMI version
+        if fmi_version.startswith("3."):
+            header_file = "fmi3Functions.h"
+            header_subdir = "fmi3"
+        else:
+            header_file = "fmi2Functions.h"
+            header_subdir = "fmi2"
         
         lines.append("# Find FMI headers directory")
         lines.append("# Can be set via -DFMI_HEADERS_DIR=/path or FMI_HEADERS_DIR environment variable")
@@ -213,17 +240,17 @@ class CMakeGenerator:
         lines.append("    set(FMI_HEADERS_DIR $ENV{FMI_HEADERS_DIR})")
         lines.append("endif()")
         lines.append("")
-        lines.append("# Try to find fmi2Functions.h if FMI_HEADERS_DIR is not set")
+        lines.append(f"# Try to find {header_file} if FMI_HEADERS_DIR is not set")
         lines.append("if(NOT FMI_HEADERS_DIR)")
         lines.append("    find_path(FMI_HEADERS_DIR")
-        lines.append("        NAMES fmi2Functions.h")
+        lines.append(f"        NAMES {header_file}")
         lines.append("        PATHS")
-        lines.append("            /usr/include/fmi2")
-        lines.append("            /usr/local/include/fmi2") 
-        lines.append("            /opt/local/include/fmi2")
+        lines.append(f"            /usr/include/{header_subdir}")
+        lines.append(f"            /usr/local/include/{header_subdir}") 
+        lines.append(f"            /opt/local/include/{header_subdir}")
         lines.append("            ${CMAKE_SOURCE_DIR}/../fmi-headers")
         lines.append("            ${CMAKE_SOURCE_DIR}/fmi-headers")
-        lines.append("        DOC \"FMI headers directory containing fmi2Functions.h\"")
+        lines.append(f"        DOC \"FMI headers directory containing {header_file}\"")
         lines.append("    )")
         lines.append("endif()")
         lines.append("")
