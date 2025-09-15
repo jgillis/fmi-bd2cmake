@@ -15,6 +15,9 @@ class CMakeGenerator:
         # CMake minimum version and project setup
         lines.append("cmake_minimum_required(VERSION 3.5)")
         lines.append("")
+
+        lines.append("""set(CMAKE_SHARED_LIBRARY_PREFIX "")""")
+        lines.append("")
         
         # Use the first build configuration
         if not build_info.build_configurations:
