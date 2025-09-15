@@ -1,6 +1,5 @@
 """CMakeLists.txt generator for FMI build descriptions."""
 
-import platform
 from typing import List
 from .parser import BuildInfo
 
@@ -27,6 +26,10 @@ class CMakeGenerator:
         project_name = config.model_identifier or "fmi_model"
         
         lines.append(f"project({project_name})")
+        lines.append("")
+
+        # Architecture detection (after project() call)
+        lines.extend(self._generate_architecture_detection())
         lines.append("")
         
         # Set language standards based on source file set languages
@@ -62,9 +65,8 @@ class CMakeGenerator:
         lines.append(f"    OUTPUT_NAME {project_name}")
         
         # Set the output directory based on platform
-        arch = self._get_architecture()
-        lines.append(f"    LIBRARY_OUTPUT_DIRECTORY binaries/{arch}")
-        lines.append(f"    RUNTIME_OUTPUT_DIRECTORY binaries/{arch}")
+        lines.append(f"    LIBRARY_OUTPUT_DIRECTORY binaries/${{FMI_PLATFORM}}")
+        lines.append(f"    RUNTIME_OUTPUT_DIRECTORY binaries/${{FMI_PLATFORM}}")
         lines.append(")")
         lines.append("")
         
@@ -146,16 +148,59 @@ class CMakeGenerator:
         # Install rules
         lines.append("# Install rules")
         lines.append(f"install(TARGETS {project_name}")
-        lines.append(f"    LIBRARY DESTINATION binaries/{arch}")
-        lines.append(f"    RUNTIME DESTINATION binaries/{arch}")
+        lines.append(f"    LIBRARY DESTINATION binaries/${{FMI_PLATFORM}}")
+        lines.append(f"    RUNTIME DESTINATION binaries/${{FMI_PLATFORM}}")
         lines.append(")")
         
         # Create binaries directory
         lines.append("")
         lines.append("# Create binaries directory")
-        lines.append(f"file(MAKE_DIRECTORY ${{CMAKE_BINARY_DIR}}/binaries/{arch})")
+        lines.append(f"file(MAKE_DIRECTORY ${{CMAKE_BINARY_DIR}}/binaries/${{FMI_PLATFORM}})")
         
         return "\n".join(lines) + "\n"
+    
+    def _generate_architecture_detection(self) -> List[str]:
+        """Generate CMake code for architecture detection (inspired by Reference-FMUs)."""
+        lines = []
+        
+        lines.append("# Architecture detection")
+        lines.append("set(FMI_ARCHITECTURE \"\" CACHE STRING \"FMI Architecture\")")
+        lines.append("set_property(CACHE FMI_ARCHITECTURE PROPERTY STRINGS \"\" \"aarch64\" \"x86\" \"x86_64\")")
+        lines.append("")
+        lines.append("if (NOT FMI_ARCHITECTURE)")
+        lines.append("  # Try CMAKE_SYSTEM_PROCESSOR first, then CMAKE_HOST_SYSTEM_PROCESSOR as fallback")
+        lines.append("  set(PROCESSOR \"${CMAKE_SYSTEM_PROCESSOR}\")")
+        lines.append("  if (NOT PROCESSOR)")
+        lines.append("    set(PROCESSOR \"${CMAKE_HOST_SYSTEM_PROCESSOR}\")")
+        lines.append("  endif()")
+        lines.append("  ")
+        lines.append("  if (PROCESSOR MATCHES \"AMD64|x86_64\")")
+        lines.append("    set(FMI_ARCHITECTURE \"x86_64\")")
+        lines.append("  elseif (PROCESSOR MATCHES \"i386|i686|x86\")")
+        lines.append("    set(FMI_ARCHITECTURE \"x86\")")
+        lines.append("  elseif (PROCESSOR MATCHES \"aarch64|arm64\")")
+        lines.append("    set(FMI_ARCHITECTURE \"aarch64\")")
+        lines.append("  elseif (PROCESSOR MATCHES \"arm\")")
+        lines.append("    set(FMI_ARCHITECTURE \"arm\")")
+        lines.append("  else ()")
+        lines.append("    # Default to x86_64 if processor is unknown or empty")
+        lines.append("    message(STATUS \"Unknown or empty system processor '${PROCESSOR}', defaulting to x86_64\")")
+        lines.append("    set(FMI_ARCHITECTURE \"x86_64\")")
+        lines.append("  endif ()")
+        lines.append("endif ()")
+        lines.append("")
+        lines.append("# Platform detection")
+        lines.append("if (WIN32)")
+        lines.append("  set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-windows\")")
+        lines.append("elseif (APPLE)")
+        lines.append("  set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-darwin\")")
+        lines.append("else ()")
+        lines.append("  set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-linux\")")
+        lines.append("endif ()")
+        lines.append("")
+        lines.append("message(STATUS \"FMI Platform: ${FMI_PLATFORM}\")")
+        
+        return lines
     
     def _generate_fmi_headers_section(self) -> List[str]:
         """Generate CMake code to find FMI headers directory."""
@@ -237,30 +282,3 @@ class CMakeGenerator:
                 c_standard = "99"   # Default to C99
         
         return c_standard, cxx_standard
-    
-    def _get_architecture(self) -> str:
-        """Get the target architecture string for FMI."""
-        machine = platform.machine().lower()
-        system = platform.system().lower()
-        
-        # Map common architecture names to FMI conventions
-        if machine in ["x86_64", "amd64"]:
-            arch = "x86_64"
-        elif machine in ["i386", "i686", "x86"]:
-            arch = "x86"
-        elif machine.startswith("arm"):
-            arch = "arm"
-        elif machine.startswith("aarch64"):
-            arch = "aarch64"
-        else:
-            arch = machine
-        
-        # Add OS suffix
-        if system == "windows":
-            return f"{arch}-windows"
-        elif system == "darwin":
-            return f"{arch}-darwin"
-        elif system == "linux":
-            return f"{arch}-linux"
-        else:
-            return f"{arch}-{system}"
