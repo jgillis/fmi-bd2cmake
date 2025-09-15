@@ -8,13 +8,13 @@ version = "0.1.0"
 description = "CMakeLists.txt generator that reads buildDescription.xml in FMI source"
 readme = "README.md"
 requires-python = ">=3.6"
+license = {file = "LICENSE"}
 authors = [
     {name = "FMI Build Tools"}
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.6",
