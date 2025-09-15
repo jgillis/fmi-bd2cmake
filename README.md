@@ -47,11 +47,9 @@ your_fmu_directory/
 After running `fmi-bd2cmake`, you can build with:
 
 ```bash
-mkdir build
-cd build
-cmake ..
-make
-make install
+cmake -B build -DFMI_HEADERS_DIR=/path/to/fmi/headers .
+cmake --build build
+cmake --install build
 ```
 
 This will create a shared library in `binaries/{arch}/` directory as per FMI convention.
@@ -86,14 +84,6 @@ The tool supports FMI 2.0 buildDescription.xml format with the following element
 - **Multiple source file sets**: Supports different language/compiler settings per source set
 - **CMake best practices**: Generates modern CMake with proper target properties
 - **Error handling**: Clear error messages for missing files or invalid XML
-
-## Architecture Detection
-
-The tool automatically detects the target architecture and generates appropriate binary paths:
-
-- Linux: `binaries/x86_64-linux/`, `binaries/arm-linux/`
-- Windows: `binaries/x86_64-windows/`, `binaries/x86-windows/`
-- macOS: `binaries/x86_64-darwin/`, `binaries/aarch64-darwin/`
 
 ## FMI Headers Configuration
 

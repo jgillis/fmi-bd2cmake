@@ -51,6 +51,11 @@ def main():
             f.write(cmake_content)
         
         print(f"Successfully generated {args.output}")
+        print("Suggested workflow: ")
+        print(" $ cmake -B build -DFMI_HEADERS_DIR=/path/to/fmi/headers .")
+        print(" $ cmake --build build --parallel 8")
+        print(" $ cmake --install build")
+
         
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
