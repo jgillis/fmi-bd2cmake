@@ -148,14 +148,14 @@ class CMakeGenerator:
         # Install rules
         lines.append("# Install rules")
         lines.append(f"install(TARGETS {project_name}")
-        lines.append(f"    LIBRARY DESTINATION binaries/${{FMI_PLATFORM}}")
-        lines.append(f"    RUNTIME DESTINATION binaries/${{FMI_PLATFORM}}")
+        lines.append(f"    LIBRARY DESTINATION ${{CMAKE_SOURCE_DIR}}/binaries/${{FMI_PLATFORM}}")
+        lines.append(f"    RUNTIME DESTINATION ${{CMAKE_SOURCE_DIR}}/binaries/${{FMI_PLATFORM}}")
         lines.append(")")
         
         # Create binaries directory
         lines.append("")
         lines.append("# Create binaries directory")
-        lines.append(f"file(MAKE_DIRECTORY ${{CMAKE_BINARY_DIR}}/binaries/${{FMI_PLATFORM}})")
+        lines.append(f"file(MAKE_DIRECTORY ${{CMAKE_SOURCE_DIR}}/binaries/${{FMI_PLATFORM}})")
         
         return "\n".join(lines) + "\n"
     
@@ -164,61 +164,61 @@ class CMakeGenerator:
         lines = []
         
         lines.append("# Architecture detection")
-        
-        # FMI 3.0 supports additional architectures compared to FMI 2.0
-        if fmi_version.startswith("3."):
-            # FMI 3.0 architecture set (expanded)
-            lines.append("set(FMI_ARCHITECTURE \"\" CACHE STRING \"FMI Architecture\")")
-            lines.append("set_property(CACHE FMI_ARCHITECTURE PROPERTY STRINGS \"\" \"aarch64\" \"arm\" \"riscv64\" \"x86\" \"x86_64\")")
-        else:
-            # FMI 2.0 architecture set (traditional)
-            lines.append("set(FMI_ARCHITECTURE \"\" CACHE STRING \"FMI Architecture\")")
-            lines.append("set_property(CACHE FMI_ARCHITECTURE PROPERTY STRINGS \"\" \"aarch64\" \"x86\" \"x86_64\")")
-        
-        lines.append("")
+        lines.append("set(FMI_ARCHITECTURE \"\" CACHE STRING \"FMI Architecture\")")
+        lines.append("set_property(CACHE FMI_ARCHITECTURE PROPERTY STRINGS \"\" \"aarch64\" \"x86\" \"x86_64\")")
+
         lines.append("if (NOT FMI_ARCHITECTURE)")
-        lines.append("  # Try CMAKE_SYSTEM_PROCESSOR first, then CMAKE_HOST_SYSTEM_PROCESSOR as fallback")
-        lines.append("  set(PROCESSOR \"${CMAKE_SYSTEM_PROCESSOR}\")")
-        lines.append("  if (NOT PROCESSOR)")
-        lines.append("    set(PROCESSOR \"${CMAKE_HOST_SYSTEM_PROCESSOR}\")")
-        lines.append("  endif()")
-        lines.append("  ")
-        
-        # Architecture detection logic
-        lines.append("  if (PROCESSOR MATCHES \"AMD64|x86_64\")")
+        lines.append("  if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES \"AMD64|x86_64\")")
         lines.append("    set(FMI_ARCHITECTURE \"x86_64\")")
-        lines.append("  elseif (PROCESSOR MATCHES \"i386|i686|x86\")")
-        lines.append("    set(FMI_ARCHITECTURE \"x86\")")
-        lines.append("  elseif (PROCESSOR MATCHES \"aarch64|arm64\")")
+        lines.append("  elseif (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES \"aarch64\")")
         lines.append("    set(FMI_ARCHITECTURE \"aarch64\")")
-        lines.append("  elseif (PROCESSOR MATCHES \"arm\")")
-        lines.append("    set(FMI_ARCHITECTURE \"arm\")")
-        
-        # FMI 3.0 includes additional architectures
-        if fmi_version.startswith("3."):
-            lines.append("  elseif (PROCESSOR MATCHES \"riscv64\")")
-            lines.append("    set(FMI_ARCHITECTURE \"riscv64\")")
-        
         lines.append("  else ()")
-        lines.append("    # Default to x86_64 if processor is unknown or empty")
-        lines.append("    message(STATUS \"Unknown or empty system processor '${PROCESSOR}', defaulting to x86_64\")")
-        lines.append("    set(FMI_ARCHITECTURE \"x86_64\")")
+        lines.append("    message(FATAL_ERROR \"Unknown System Architecture: ${CMAKE_SYSTEM_PROCESSOR}\")")
         lines.append("  endif ()")
         lines.append("endif ()")
-        lines.append("")
-        
-        # Platform detection (same for both versions)
-        lines.append("# Platform detection")
-        lines.append("if (WIN32)")
-        lines.append("  set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-windows\")")
-        lines.append("elseif (APPLE)")
-        lines.append("  set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-darwin\")")
-        lines.append("else ()")
-        lines.append("  set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-linux\")")
-        lines.append("endif ()")
-        lines.append("")
-        lines.append("message(STATUS \"FMI Platform: ${FMI_PLATFORM}\")")
-        
+
+        # FMI 3.0 supports additional architectures compared to FMI 2.0
+        if fmi_version.startswith("3."):
+
+            lines.append("set(FMI_ARCHITECTURE \"\" CACHE STRING \"FMI Architecture\")")
+            lines.append("set_property(CACHE FMI_ARCHITECTURE PROPERTY STRINGS \"\" \"aarch64\" \"x86\" \"x86_64\")")
+
+            lines.append("if (NOT FMI_ARCHITECTURE)")
+            lines.append("  if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES \"AMD64|x86_64\")")
+            lines.append("    set(FMI_ARCHITECTURE \"x86_64\")")
+            lines.append("  elseif (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES \"aarch64\")")
+            lines.append("    set(FMI_ARCHITECTURE \"aarch64\")")
+            lines.append("  else ()")
+            lines.append("    message(FATAL_ERROR \"Unknown System Architecture: ${CMAKE_SYSTEM_PROCESSOR}\")")
+            lines.append("  endif ()")
+            lines.append("endif ()")
+
+            lines.append("if (WIN32)")
+            lines.append("    set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-windows\")")
+            lines.append("elseif (APPLE)")
+            lines.append("    set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-darwin\")")
+            lines.append("else ()")
+            lines.append("    set(FMI_PLATFORM \"${FMI_ARCHITECTURE}-linux\")")
+            lines.append("endif ()")
+        else:
+            lines.append("if (WIN32)")
+            lines.append("    set(FMI_PLATFORM win)")
+            lines.append("elseif (APPLE)")
+            lines.append("    set(FMI_PLATFORM darwin)")
+            lines.append("else ()")
+            lines.append("    set(FMI_PLATFORM linux)")
+            lines.append("endif ()")
+
+            lines.append("if (\"${FMI_ARCHITECTURE}\" STREQUAL \"x86_64\")")
+            lines.append("    set (FMI_PLATFORM ${FMI_PLATFORM}64)")
+            lines.append("elseif (\"${FMI_ARCHITECTURE}\" STREQUAL \"universal64\")")
+            lines.append("    set (FMI_PLATFORM ${FMI_PLATFORM}64)")
+            lines.append("elseif (\"${FMI_ARCHITECTURE}\" STREQUAL \"x86\")")
+            lines.append("    set (FMI_PLATFORM ${FMI_PLATFORM}32)")
+            lines.append("else ()")
+            lines.append("    message(FATAL_ERROR \"Unsupported architecture for FMI version < 3.0: ${FMI_ARCHITECTURE}\")")
+            lines.append("endif ()")
+
         return lines
     
     def _generate_fmi_headers_section(self, fmi_version: str) -> List[str]:
