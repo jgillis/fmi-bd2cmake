@@ -1,1 +1,0 @@
-/usr/bin/cc -fPIC -Wl,--dependency-file=CMakeFiles/advanced_model.dir/link.d -shared -Wl,-soname,libadvanced_model.so -o binaries/x86_64-linux/libadvanced_model.so CMakeFiles/advanced_model.dir/sources/main.c.o CMakeFiles/advanced_model.dir/sources/utils.c.o  -lm

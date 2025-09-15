@@ -1,1 +1,0 @@
-/home/runner/work/fmi-bd2cmake/fmi-bd2cmake/test_example/build/install/binaries/x86_64-linux/libmodel_DANA_modified_extraction_76122067_49_ds.so

@@ -1,7 +1,0 @@
-/home/runner/work/fmi-bd2cmake/fmi-bd2cmake/test_example/build/CMakeFiles/model_DANA_modified_extraction_76122067_49_ds.dir
-/home/runner/work/fmi-bd2cmake/fmi-bd2cmake/test_example/build/CMakeFiles/edit_cache.dir
-/home/runner/work/fmi-bd2cmake/fmi-bd2cmake/test_example/build/CMakeFiles/rebuild_cache.dir
-/home/runner/work/fmi-bd2cmake/fmi-bd2cmake/test_example/build/CMakeFiles/list_install_components.dir
-/home/runner/work/fmi-bd2cmake/fmi-bd2cmake/test_example/build/CMakeFiles/install.dir
-/home/runner/work/fmi-bd2cmake/fmi-bd2cmake/test_example/build/CMakeFiles/install/local.dir
-/home/runner/work/fmi-bd2cmake/fmi-bd2cmake/test_example/build/CMakeFiles/install/strip.dir

@@ -1,2 +1,0 @@
-[console_scripts]
-fmi-bd2cmake = fmi_bd2cmake.cli:main

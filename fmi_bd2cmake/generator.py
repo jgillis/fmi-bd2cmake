@@ -26,10 +26,13 @@ class CMakeGenerator:
         lines.append(f"project({project_name})")
         lines.append("")
         
-        # Set C standard based on source file set language
-        c_standard = self._get_c_standard(config)
+        # Set language standards based on source file set languages
+        c_standard, cxx_standard = self._get_language_standards(config)
         if c_standard:
             lines.append(f"set(CMAKE_C_STANDARD {c_standard})")
+        if cxx_standard:
+            lines.append(f"set(CMAKE_CXX_STANDARD {cxx_standard})")
+        if c_standard or cxx_standard:
             lines.append("")
         
         # Collect all source files
@@ -143,11 +146,16 @@ class CMakeGenerator:
         
         return "\n".join(lines) + "\n"
     
-    def _get_c_standard(self, config) -> str:
-        """Determine C standard from source file set language."""
+    def _get_language_standards(self, config) -> tuple:
+        """Determine C and C++ standards from source file set languages."""
+        c_standard = None
+        cxx_standard = None
+        
         for sfs in config.source_file_sets:
-            if sfs.language.upper() in ["C99", "C89", "C90", "C11", "C17"]:
-                # Map language to CMake C standard
+            lang = sfs.language.upper()
+            
+            # Handle C standards
+            if lang in ["C99", "C89", "C90", "C11", "C17"]:
                 lang_map = {
                     "C89": "90",
                     "C90": "90", 
@@ -155,8 +163,36 @@ class CMakeGenerator:
                     "C11": "11",
                     "C17": "17"
                 }
-                return lang_map.get(sfs.language.upper(), "99")
-        return "99"  # Default to C99
+                if not c_standard:  # Use first found standard
+                    c_standard = lang_map.get(lang, "99")
+            
+            # Handle C++ standards
+            elif lang in ["C++", "CPP", "C++98", "C++03", "C++11", "C++14", "C++17", "C++20"]:
+                cxx_map = {
+                    "C++": "11",    # Default C++ to C++11
+                    "CPP": "11",    # Default CPP to C++11
+                    "C++98": "98",
+                    "C++03": "03",
+                    "C++11": "11",
+                    "C++14": "14",
+                    "C++17": "17",
+                    "C++20": "20"
+                }
+                if not cxx_standard:  # Use first found standard
+                    cxx_standard = cxx_map.get(lang, "11")
+        
+        # Set defaults if we have source files but no explicit standards
+        if not c_standard and not cxx_standard:
+            # Check if we have any source files to determine default
+            has_c_files = any(sf.name.endswith(('.c', '.h')) for sfs in config.source_file_sets for sf in sfs.source_files)
+            has_cpp_files = any(sf.name.endswith(('.cpp', '.cxx', '.cc', '.hpp', '.hxx')) for sfs in config.source_file_sets for sf in sfs.source_files)
+            
+            if has_cpp_files:
+                cxx_standard = "11"  # Default to C++11
+            elif has_c_files:
+                c_standard = "99"   # Default to C99
+        
+        return c_standard, cxx_standard
     
     def _get_architecture(self) -> str:
         """Get the target architecture string for FMI."""
