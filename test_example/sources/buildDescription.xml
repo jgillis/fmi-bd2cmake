@@ -1,0 +1,7 @@
+<fmiBuildDescription fmiVersion="2.0">
+  <BuildConfiguration description="Default build configuration" modelIdentifier="model_DANA_modified_extraction_76122067_49_ds">
+    <SourceFileSet language="C99">
+      <SourceFile name="model_DANA_modified_extraction_76122067_49_ds.c"/>
+    </SourceFileSet>
+  </BuildConfiguration>
+</fmiBuildDescription>

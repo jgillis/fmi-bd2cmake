@@ -1,0 +1,11 @@
+README.md
+setup.py
+fmi_bd2cmake/__init__.py
+fmi_bd2cmake/cli.py
+fmi_bd2cmake/generator.py
+fmi_bd2cmake/parser.py
+fmi_bd2cmake.egg-info/PKG-INFO
+fmi_bd2cmake.egg-info/SOURCES.txt
+fmi_bd2cmake.egg-info/dependency_links.txt
+fmi_bd2cmake.egg-info/entry_points.txt
+fmi_bd2cmake.egg-info/top_level.txt
