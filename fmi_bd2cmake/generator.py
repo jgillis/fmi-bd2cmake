@@ -14,9 +14,6 @@ class CMakeGenerator:
         # CMake minimum version and project setup
         lines.append("cmake_minimum_required(VERSION 3.5)")
         lines.append("")
-
-        lines.append("""set(CMAKE_SHARED_LIBRARY_PREFIX "")""")
-        lines.append("")
         
         # Use the first build configuration
         if not build_info.build_configurations:
@@ -26,6 +23,9 @@ class CMakeGenerator:
         project_name = config.model_identifier or "fmi_model"
         
         lines.append(f"project({project_name})")
+        lines.append("")
+
+        lines.append("""set(CMAKE_SHARED_LIBRARY_PREFIX "")""")
         lines.append("")
 
         # Architecture detection (after project() call)
