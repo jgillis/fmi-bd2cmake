@@ -82,6 +82,7 @@ The tool supports FMI 2.0 buildDescription.xml format with the following element
 - **Standard library only**: No external dependencies beyond Python standard library
 - **Cross-platform**: Automatically detects target architecture (x86_64-linux, x86_64-windows, etc.)
 - **Full FMI support**: Handles source files, include directories, preprocessor definitions, and libraries
+- **FMI headers support**: Optional specification of external FMI header directory (typically containing fmi2Functions.h)
 - **Multiple source file sets**: Supports different language/compiler settings per source set
 - **CMake best practices**: Generates modern CMake with proper target properties
 - **Error handling**: Clear error messages for missing files or invalid XML
@@ -93,6 +94,31 @@ The tool automatically detects the target architecture and generates appropriate
 - Linux: `binaries/x86_64-linux/`, `binaries/arm-linux/`
 - Windows: `binaries/x86_64-windows/`, `binaries/x86-windows/`
 - macOS: `binaries/x86_64-darwin/`, `binaries/aarch64-darwin/`
+
+## FMI Headers Configuration
+
+FMI header files (such as `fmi2Functions.h`) are typically not included in the FMU source distribution. The generated CMakeLists.txt automatically attempts to locate these headers and provides several ways to specify their location:
+
+### CMake Variable
+```bash
+cmake -DFMI_HEADERS_DIR=/path/to/fmi/headers .
+```
+
+### Environment Variable
+```bash
+export FMI_HEADERS_DIR=/path/to/fmi/headers
+cmake .
+```
+
+### Automatic Discovery
+The generated CMakeLists.txt will automatically search for FMI headers in common locations:
+- `/usr/include/fmi2` (Ubuntu/Debian libfmi-dev package)
+- `/usr/local/include/fmi2` (custom installation)
+- `/opt/local/include/fmi2` (MacPorts)
+- `../fmi-headers` (relative to project)
+- `fmi-headers` (in project directory)
+
+The CMake variable takes precedence over the environment variable, which takes precedence over automatic discovery.
 
 ## Examples
 
